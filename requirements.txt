@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic
+numpy
+pandas
+scipy
+joblib
+httpx
+fastf1   # opcional si usarás fastf1 para datos de telemetría (instalar solo si lo necesitas)
+pytest
+python-dotenv
