@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Strategy Predictor PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        .f1-font { font-family: 'Orbitron', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-red-600 uppercase tracking-widest italic f1-font text-shadow-lg">F1 Pit Strategy</h1>
+            <p class="text-slate-400 uppercase text-xs tracking-widest mt-2">Professional Strategy Engine</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-700 h-fit">
+                <h2 class="text-xl font-semibold mb-6 border-b border-slate-700 pb-2 flex items-center text-red-500">
+                    <i class="fas fa-sliders-h mr-2"></i> SETUP DE CARRERA
+                </h2>
+                <form id="strategyForm" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1 uppercase tracking-wider font-bold">Circuito</label>
+                            <div class="relative">
+                                <i class="fas fa-map-marker-alt absolute left-3 top-3 text-slate-500"></i>
+                                <input type="text" id="circuit" value="Monza" class="w-full bg-slate-900 rounded-lg p-2 pl-10 border border-slate-700 focus:border-red-500 outline-none transition-all text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1 uppercase tracking-wider font-bold">Piloto</label>
+                            <div class="relative">
+                                <i class="fas fa-user absolute left-3 top-3 text-slate-500"></i>
+                                <select id="driver" class="w-full bg-slate-900 rounded-lg p-2 pl-10 border border-slate-700 focus:border-red-500 outline-none transition-all text-sm appearance-none cursor-pointer">
+                                    <option value="Verstappen">Max Verstappen</option>
+                                    <option value="Perez" selected>Sergio Pérez</option>
+                                    <option value="Hamilton">Lewis Hamilton</option>
+                                    <option value="Alonso">Fernando Alonso</option>
+                                    <option value="Leclerc">Charles Leclerc</option>
+                                    <option value="Sainz">Carlos Sainz</option>
+                                    <option value="Norris">Lando Norris</option>
+                                    <option value="Russell">George Russell</option>
+                                    <option value="Piastri">Oscar Piastri</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1 uppercase tracking-wider font-bold">Temperatura (°C)</label>
+                            <input type="number" id="temp" value="28" class="w-full bg-slate-900 rounded-lg p-2 border border-slate-700 outline-none focus:border-red-500 transition-all text-sm text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1 uppercase tracking-wider font-bold">Total Vueltas</label>
+                            <input type="number" id="laps" value="53" class="w-full bg-slate-900 rounded-lg p-2 border border-slate-700 outline-none focus:border-red-500 transition-all text-sm text-white">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl transition duration-300 uppercase tracking-widest shadow-lg flex items-center justify-center">
+                        CALCULAR ESTRATEGIA ÓPTIMA
+                    </button>
+                </form>
+            </div>
+
+            <div id="resultArea" class="hidden bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-700">
+                <div id="loading" class="hidden text-center py-20">
+                    <div class="animate-spin inline-block w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full mb-4"></div>
+                    <p class="text-slate-400 animate-pulse uppercase tracking-widest text-xs">Simulando degradación...</p>
+                </div>
+
+                <div id="content">
+                    <div class="flex justify-between items-end mb-8 bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 shadow-inner">
+                        <div>
+                            <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Tiempo Total de Carrera</p>
+                            <div class="text-4xl font-bold f1-font text-white" id="resTime">--:--:--</div>
+                        </div>
+                        <div class="bg-red-600/20 text-red-500 px-3 py-2 rounded-lg border border-red-600/30 font-bold uppercase text-xs" id="resStops">
+                            0 paradas
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase mb-3 tracking-widest flex items-center">
+                            <i class="fas fa-layer-group mr-2"></i> Línea de Tiempo de Neumáticos
+                        </h3>
+                        <div id="stintBar" class="w-full h-10 bg-slate-900 rounded-lg overflow-hidden flex border border-slate-700 shadow-inner"></div>
+                        
+                        <div class="flex flex-wrap gap-4 mt-3 justify-center text-[10px] font-bold uppercase tracking-tighter italic">
+                            <div class="flex items-center"><span class="w-3 h-3 bg-red-600 rounded-full mr-1"></span> Soft</div>
+                            <div class="flex items-center"><span class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></span> Medium</div>
+                            <div class="flex items-center"><span class="w-3 h-3 bg-slate-100 rounded-full mr-1"></span> Hard</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-8 bg-slate-900 p-4 rounded-xl border border-slate-700 shadow-lg">
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase mb-4 tracking-widest flex items-center justify-center">
+                            <i class="fas fa-chart-line mr-2"></i> Evolución del Tiempo de Vuelta
+                        </h3>
+                        <canvas id="degradationChart" height="120"></canvas>
+                        <p class="text-[9px] text-slate-500 text-center mt-2 italic">A mayor altura en la curva, más desgaste y tiempo perdido por vuelta.</p>
+                    </div>
+                    
+                    <div id="pitTimeline" class="space-y-2 mb-6"></div>
+
+                    <div class="bg-slate-900/50 p-3 rounded-lg border-l-4 border-red-600 shadow-inner">
+                        <p id="explanation" class="text-[11px] text-slate-300 italic"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myChart = null;
+        const tyreColors = { 'soft': 'bg-red-600', 'medium': 'bg-yellow-500', 'hard': 'bg-slate-100', 'default': 'bg-slate-500' };
+
+        document.getElementById('strategyForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const resultArea = document.getElementById('resultArea');
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('content');
+            
+            resultArea.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            content.classList.add('hidden');
+
+            const totalLaps = parseInt(document.getElementById('laps').value);
+            const requestData = {
+                circuit: document.getElementById('circuit').value,
+                temperature: parseFloat(document.getElementById('temp').value),
+                driver: document.getElementById('driver').value,
+                team: "Red Bull", 
+                available_tyres: ["soft", "medium", "hard"],
+                total_laps: totalLaps,
+                pit_time: 22.0
+            };
+
+            try {
+                const response = await fetch('/recommend', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(requestData)
+                });
+                const res = await response.json();
+                
+                document.getElementById('resTime').innerText = res.estimated_time;
+                document.getElementById('resStops').innerText = res.strategy;
+                
+                // 1. Barra de Stints con texto dinámico
+                const stintBar = document.getElementById('stintBar');
+                stintBar.innerHTML = '';
+                let currentLap = 0;
+                let lastTyre = res.pitstops.length > 0 ? (res.pitstops[0].tyre === 'soft' ? 'medium' : 'soft') : 'medium';
+                const segments = [...res.pitstops, { lap: totalLaps, tyre: 'end' }];
+                
+                segments.forEach((stop) => {
+                    const stintLen = stop.lap - currentLap;
+                    const width = (stintLen / totalLaps) * 100;
+                    const color = tyreColors[lastTyre.toLowerCase()] || tyreColors['default'];
+                    const textCol = lastTyre.toLowerCase() === 'hard' ? 'text-black' : 'text-white';
+                    
+                    stintBar.innerHTML += `
+                        <div style="width: ${width}%" class="${color} ${textCol} h-full border-r border-black/20 flex items-center justify-center text-[8px] font-black uppercase overflow-hidden whitespace-nowrap px-1 transition-all duration-700">
+                            ${stintLen > 4 ? lastTyre : ''}
+                        </div>`;
+                    currentLap = stop.lap;
+                    lastTyre = stop.tyre;
+                });
+
+                // 2. Gráfica de Degradación (Corregida con Ejes)
+                const ctx = document.getElementById('degradationChart').getContext('2d');
+                if (myChart) myChart.destroy();
+                const labels = Array.from({length: totalLaps}, (_, i) => i + 1);
+                
+                // Simulación de degradación un poco más visible para la demo
+                const dataPoints = labels.map(l => 85 + (l * 0.05) + (Math.random() * 0.2));
+
+                myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'T. de Vuelta (seg)',
+                            data: dataPoints,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            fill: true,
+                            pointRadius: 0,
+                            borderWidth: 2,
+                            tension: 0.4
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        plugins: { legend: { display: false } },
+                        scales: { 
+                            x: { 
+                                title: { display: true, text: 'VUELTAS', color: '#64748b', font: { size: 9, weight: 'bold' } },
+                                ticks: { color: '#475569', font: { size: 8 } },
+                                grid: { display: false } 
+                            }, 
+                            y: { 
+                                title: { display: true, text: 'SEGUNDOS', color: '#64748b', font: { size: 9, weight: 'bold' } },
+                                ticks: { color: '#475569', font: { size: 8 } }, 
+                                grid: { color: '#1e293b' } 
+                            } 
+                        }
+                    }
+                });
+
+                // 3. Timeline con Iconos
+                const timeline = document.getElementById('pitTimeline');
+                timeline.innerHTML = '';
+                res.pitstops.forEach(pit => {
+                    const tyreColorClass = tyreColors[pit.tyre.toLowerCase()] || 'bg-slate-500';
+                    timeline.innerHTML += `
+                        <div class="flex items-center justify-between bg-slate-900 p-2.5 rounded-lg border border-slate-700 shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <span class="bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded italic">VUELTA ${pit.lap}</span>
+                                <span class="text-xs font-semibold text-slate-300 italic">ENTRADA A PITS</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] uppercase font-bold text-slate-400">NUEVO:</span>
+                                <div class="flex items-center bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
+                                    <span class="w-2 h-2 ${tyreColorClass} rounded-full mr-1.5 shadow-[0_0_5px_rgba(255,255,255,0.2)]"></span>
+                                    <span class="text-[10px] uppercase font-bold text-white">${pit.tyre}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+
+                document.getElementById('explanation').innerText = Array.isArray(res.details.explanation) ? res.details.explanation.join(' | ') : res.details.explanation;
+                
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+            } catch (err) {
+                alert("Error de conexión con el servidor de estrategia.");
+                loading.classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>

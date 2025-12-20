@@ -1,0 +1,10 @@
+# Entornos virtuales
+.venv/
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Datos y descargas (FastF1 guarda datos aquí)
+cache/
